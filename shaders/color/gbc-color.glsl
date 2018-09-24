@@ -4,7 +4,7 @@
    Author: hunterk
    License: Public domain
 */
-// Shader that replicates the LCD dynamics from a GameBoy Advance
+// Shader that replicates the LCD dynamics from a GameBoy Color
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
@@ -14,12 +14,12 @@
 #endif
 
 // Parameter lines go here:
-#pragma parameter darken_screen "Darken Screen" 1.0 -0.25 1.0 0.05
+#pragma parameter lighten_screen "Lighten Screen" 1.0 0.0 1.0 0.05
 #ifdef PARAMETER_UNIFORM
 // All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float darken_screen;
+uniform COMPAT_PRECISION float lighten_screen;
 #else
-#define darken_screen 1.0
+#define lighten_screen 1.0
 #endif
 
 #define target_gamma 2.2
@@ -120,7 +120,7 @@ COMPAT_VARYING vec4 TEX0;
 
 void main()
 {
-   vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma + darken_screen)).rgba;
+   vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma + (lighten_screen * -1.0))).rgba;
    vec4 avglum = vec4(0.5);
    screen = mix(screen, avglum, (1.0 - contrast));
    

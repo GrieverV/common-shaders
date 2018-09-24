@@ -13,22 +13,22 @@
 #define COMPAT_PRECISION
 #endif
 
-#define target_gamma 2.2
-#define display_gamma 2.2
+#define target_gamma 1.91
+#define display_gamma 1.91
 #define sat 1.0
-#define lum 1.0
+#define lum 0.89
 #define contrast 1.0
 #define blr 0.0
 #define blg 0.0
 #define blb 0.0
-#define r 0.82
-#define g 0.66
-#define b 0.81
-#define rg 0.085
-#define rb 0.085
-#define gr 0.25
-#define gb 0.105
-#define br -0.07
+#define r 0.87
+#define g 0.645
+#define b 0.73
+#define rg 0.10
+#define rb 0.10
+#define gr 0.255
+#define gb 0.17
+#define br -0.125
 #define bg 0.255
 #define overscan_percent_x 0.0
 #define overscan_percent_y 0.0

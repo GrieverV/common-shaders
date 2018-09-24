@@ -3,7 +3,7 @@
    License: Public domain
 */
 
-// Shader that replicates the LCD dynamics from a GameBoy Advance
+// Shader that closely replicates Jeff Frohwein's "Gameboy HiColour Converter" color algorithm.
 
 vec3 grayscale(vec3 col)
 {
@@ -92,9 +92,9 @@ void main()
 {
 //part 1
     float saturation    = 1.0;
-    float Display_gamma = 1.02;
-    float CRT_gamma     = 2.4;
-    float luminance     = 1.0;
+    float Display_gamma = 2.2;
+    float CRT_gamma     = 2.2;
+    float luminance     = 1.12;
 
     vec3 gamma  = vec3(CRT_gamma / Display_gamma);
     vec3 res    = COMPAT_TEXTURE(Source, vTexCoord).xyz;
@@ -107,15 +107,15 @@ void main()
     float g = c.y;
     float b = c.z;
     float a = c.w;
-    float w = r * 0.714 + g * 0.251 + b * 0.000;
-    float q = r * 0.071 + g * 0.643 + b * 0.216;
-    float e = r * 0.071 + g * 0.216 + b * 0.643;
+    float w = r * 0.730 + g * 0.270 + b * 0.000;
+    float q = r * 0.085 + g * 0.675 + b * 0.240;
+    float e = r * 0.085 + g * 0.240 + b * 0.675;
 
 //part 3
     saturation      = 1.0;
-    Display_gamma   = 3.6;
-    CRT_gamma       = 2.4;
-    luminance       = 1.01;
+    Display_gamma   = 1.7;
+    CRT_gamma       = 2.2;
+    luminance       = 1.0;
 
     res     = vec3(w, q, e);
     gamma   = gamma = vec3(CRT_gamma / Display_gamma);

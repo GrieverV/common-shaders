@@ -1,10 +1,25 @@
 /*
-   Shader Modified: Pokefan531
-   Color Mangler
-   Author: hunterk
+   Gambatte Color
+   A GLSL port of the color correction option on Gambatte emulator
+   Ported by: RiskyJumps
    License: Public domain
 */
-// Shader that replicates the LCD dynamics from a GameBoy Advance
+
+/*
+OPTIONS:
+
+INT_OPS (default: Disabled)
+It's supposed to be more "accurate" but it's a waste. Not recommended
+*/
+//#define INT_OPS
+
+/*
+SIMULATE_INT (default: Disabled)
+Only meaningful if INT_OPS is disabled. It truncates floats. Then
+again, it's supposed to be more "accurate" but it looks just
+too similar. It's still a waste. Not recommended.
+*/
+//#define SIMULATE_INT
 
 // Compatibility #ifdefs needed for parameters
 #ifdef GL_ES
@@ -12,35 +27,6 @@
 #else
 #define COMPAT_PRECISION
 #endif
-
-// Parameter lines go here:
-#pragma parameter darken_screen "Darken Screen" 1.0 -0.25 1.0 0.05
-#ifdef PARAMETER_UNIFORM
-// All parameter floats need to have COMPAT_PRECISION in front of them
-uniform COMPAT_PRECISION float darken_screen;
-#else
-#define darken_screen 1.0
-#endif
-
-#define target_gamma 2.2
-#define display_gamma 2.2
-#define sat 1.0
-#define lum 0.94
-#define contrast 1.0
-#define blr 0.0
-#define blg 0.0
-#define blb 0.0
-#define r 0.82
-#define g 0.665
-#define b 0.73
-#define rg 0.125
-#define rb 0.195
-#define gr 0.24
-#define gb 0.075
-#define br -0.06
-#define bg 0.21
-#define overscan_percent_x 0.0
-#define overscan_percent_y 0.0
 
 #if defined(VERTEX)
 
@@ -75,9 +61,9 @@ uniform COMPAT_PRECISION vec2 InputSize;
 
 void main()
 {
-    gl_Position = MVPMatrix * VertexCoord;
-    COL0 = COLOR;
-    TEX0.xy = TexCoord.xy;
+     gl_Position = MVPMatrix * VertexCoord;
+     COL0 = COLOR;
+     TEX0.xy = TexCoord.xy;
 }
 
 #elif defined(FRAGMENT)
@@ -114,29 +100,62 @@ COMPAT_VARYING vec4 TEX0;
 // compatibility #defines
 #define Source Texture
 #define vTexCoord TEX0.xy
-#define texture(c, d) COMPAT_TEXTURE(c, d)
+
 #define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
 {
-   vec4 screen = pow(texture(Source, vTexCoord), vec4(target_gamma + darken_screen)).rgba;
-   vec4 avglum = vec4(0.5);
-   screen = mix(screen, avglum, (1.0 - contrast));
-   
- //				r   g    b   black
-mat4 color = mat4(r,  rg,  rb, 0.0,  //red channel
-			   gr,  g,   gb, 0.0,  //green channel
-			   br,  bg,  b,  0.0,  //blue channel
-			  blr, blg, blb,    0.0); //alpha channel; these numbers do nothing for our purposes.
-			  
-mat4 adjust = mat4((1.0 - sat) * 0.3086 + sat, (1.0 - sat) * 0.3086, (1.0 - sat) * 0.3086, 1.0,
-(1.0 - sat) * 0.6094, (1.0 - sat) * 0.6094 + sat, (1.0 - sat) * 0.6094, 1.0,
-(1.0 - sat) * 0.0820, (1.0 - sat) * 0.0820, (1.0 - sat) * 0.0820 + sat, 1.0,
-0.0, 0.0, 0.0, 1.0);
-	color *= adjust;
-	screen = clamp(screen * lum, 0.0, 1.0);
-	screen = color * screen;
-	FragColor = pow(screen, vec4(1.0 / display_gamma));
-} 
+     vec4 color = COMPAT_TEXTURE(Texture, TEX0.xy);
+
+#ifdef INT_OPS
+     color.rgb *= 255.0;
+
+     int r = (int)color.r;
+     int g = (int)color.g;
+     int b = (int)color.b;
+
+     int R = (r * 13 + g * 2 + b) >> 4;
+     int G = (g *  3 + b) >> 2;
+     int B = (r *  3 + g * 2 + b * 11) >> 4;
+
+     color.rgb = vec3((float)R, (float)G, (float)B);
+     color.rgb /= 255.0;
+
+     FragColor = color;
+     return;
+
+#else
+     mat3 color_correction = mat3(
+         13.0,  2.0,   1.0,
+          0.0,  3.0,   1.0,
+          3.0,  2.0,  11.0
+     );
+
+     mat3 scale = mat3(
+         1.0/16.0,      0.0,       0.0,
+              0.0,  1.0/4.0,       0.0,
+              0.0,      0.0,  1.0/16.0
+     );
+
+     color_correction *= scale;
+
+#ifdef SIMULATE_INT
+     color.rgb *= 255.0;
+     color.rgb = floor(color.rgb);
+     color.rgb *= color_correction;
+     color.rgb = floor(color.rgb);
+     color.rgb /= 255.0;
+     FragColor = color;
+     return;
+
+#else
+     color.rgb *= color_correction;
+     FragColor = color;
+     return;
+
+#endif
+
+#endif
+}
 #endif
