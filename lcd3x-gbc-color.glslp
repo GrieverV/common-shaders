@@ -1,0 +1,12 @@
+shaders = "2"
+
+shader0 = "shaders/color/gbc-color.glsl"
+filter_linear0 = "false"
+
+shader1 = "shaders/lcd3x.glsl"
+filter_linear1 = "true"
+
+parameters = "darken_screen;brighten_scanlines;brighten_lcd"
+brighten_lcd = "10.000000"
+brighten_scanlines = "18.500000"
+darken_screen = "0.000000"
